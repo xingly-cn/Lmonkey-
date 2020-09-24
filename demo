@@ -1,0 +1,51 @@
+# 新零云科技
+# 个人博客：www.xingly.cn
+# QQ：987599519
+
+import requests
+from lxml import etree
+
+
+# 登陆地址
+loginurl = 'https://www.lmonkey.com/login'
+# 目标地址
+orderurl = 'https://www.lmonkey.com/my/order'
+# 请求头
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
+}
+# 2.设置session [ 模拟自动登陆 ]
+req = requests.session()
+
+# 1.获取token
+res = req.get(url=loginurl,headers=headers)                        # 划重点：使用req进行get请求[不知道为啥]
+if(res.status_code == 200):
+    html = etree.HTML(res.text)
+    token = html.xpath('//input[@name="_token"]/@value')[0]
+    print('成功获取token值：',token)
+
+# 设置data数据 和 登录请求
+username = input('账号：')
+password = input('密码：')
+data = {
+    '_token':token,
+    'username':username,
+    'password':password
+}
+req.post(url=loginurl,headers=headers,data=data)
+print('登陆成功！')
+
+# 获取数据
+res = req.get(url=orderurl,headers=headers)
+if(res.status_code == 200):
+    print('正在获取订单信息：')
+    html = etree.HTML(res.text)
+    titles = html.xpath('//h6[@class="mb-0"]/text()')
+    ordernumbers = html.xpath('//small[@class="d-block text-muted font-weight-bold"]/text()')
+    for title, ordernumber in zip(titles, ordernumbers):
+        data = {
+            '课程名：': title,
+            '': ordernumber
+        }
+        print(data)
+
